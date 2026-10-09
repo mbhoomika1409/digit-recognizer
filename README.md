@@ -7,7 +7,6 @@ A convolutional neural network trained on MNIST, served through a Flask web app.
 
 ## Demo
 
-![Digit Recognizer demo]
 <img width="1395" height="817" alt="Screenshot 2026-10-09 at 14 05 39" src="https://github.com/user-attachments/assets/a996a207-24c6-44f4-9578-7990f794eda3" />
 
 
@@ -22,16 +21,16 @@ A convolutional neural network trained on MNIST, served through a Flask web app.
 Every digit class has precision and recall above 98.4%.
 
 ### Training curves
-![Training curves]
+
 <img width="1115" height="409" alt="Screenshot 2026-10-09 at 14 06 42" src="https://github.com/user-attachments/assets/7b98ed2f-55f4-47bf-a339-7a56165e21f8" />
 
 ### Confusion matrix (10,000 test images)
-![Confusion matrix]
+
 <img width="641" height="547" alt="Screenshot 2026-10-09 at 14 07 06" src="https://github.com/user-attachments/assets/dac7d39f-cba7-421a-b3cc-fa1dcb446e39" />
 
 
 ### Misclassified examples
-![Misclassified]
+
 <img width="1119" height="419" alt="Screenshot 2026-10-09 at 14 07 23" src="https://github.com/user-attachments/assets/5e97f6c6-e09c-4f0c-8dfc-8a8cee81d08f" />
 
 
