@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digit Recognizer</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #e8eaf6;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(16, 185, 129, 0.30), transparent 45%),
+      radial-gradient(circle at 85% 80%, rgba(34, 211, 238, 0.20), transparent 45%),
+      #06120f;
+  }
+  .card {
+    background: rgba(14, 32, 30, 0.8);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(52, 211, 153, 0.25);
+    border-radius: 24px;
+    padding: 32px;
+    width: 100%;
+    max-width: 800px;
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.5);
+  }
+
+  /* ----- header ----- */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .chip {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 5px 12px;
+    border-radius: 999px;
+    color: #67e8f9;
+    background: rgba(34, 211, 238, 0.1);
+    border: 1px solid rgba(34, 211, 238, 0.3);
+  }
+  .chip.purple {
+    color: #6ee7b7;
+    background: rgba(16, 185, 129, 0.12);
+    border-color: rgba(16, 185, 129, 0.35);
+  }
+  h1 {
+    font-size: 2rem;
+    background: linear-gradient(90deg, #6ee7b7, #67e8f9);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .sub { color: #8fb3aa; margin: 8px 0 26px; font-size: 0.95rem; }
+
+  /* ----- layout ----- */
+  .row { display: flex; gap: 32px; flex-wrap: wrap; }
+  .left, .right { flex: 1; min-width: 260px; }
+
+  /* ----- canvas ----- */
+  canvas {
+    width: 280px;
+    height: 280px;
+    max-width: 100%;
+    background: #000;
+    border: 2px solid rgba(52, 211, 153, 0.45);
+    border-radius: 18px;
+    cursor: crosshair;
+    touch-action: none;
+    display: block;
+    box-shadow: 0 0 0 5px rgba(16, 185, 129, 0.1), 0 12px 30px rgba(0, 0, 0, 0.5);
+  }
+  button {
+    margin-top: 16px;
+    width: 280px;
+    max-width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #10b981, #22d3ee);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.2s;
+  }
+  button:hover { opacity: 0.92; }
+  button:active { transform: scale(0.97); }
+
+  /* ----- result ----- */
+  .result {
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 16px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .big-digit { font-size: 5.5rem; font-weight: 800; line-height: 1; color: #34d399; }
+  .conf { color: #8fb3aa; margin-top: 8px; font-size: 0.95rem; min-height: 1.4em; }
+
+  /* ----- bars ----- */
+  .bar-row { display: flex; align-items: center; gap: 10px; margin: 6px 0; font-size: 0.9rem; }
+  .bar-row .label { width: 14px; text-align: right; color: #a7c9c0; font-weight: 600; }
+  .track { flex: 1; height: 12px; background: rgba(255, 255, 255, 0.06); border-radius: 6px; overflow: hidden; }
+  .fill { height: 100%; width: 0%; background: #2d4a44; border-radius: 6px; transition: width 0.15s; }
+  .fill.top { background: linear-gradient(90deg, #10b981, #22d3ee); }
+  .pct { width: 48px; text-align: right; color: #8fb3aa; font-variant-numeric: tabular-nums; }
+
+  /* ----- footer tips ----- */
+  .tips {
+    margin-top: 28px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(52, 211, 153, 0.2);
+    color: #8fb3aa;
+    font-size: 0.85rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="chips">
+      <span class="chip">PyTorch CNN</span>
+      <span class="chip purple">99.20% test accuracy</span>
+      <span class="chip">Real-time prediction</span>
+    </div>
+    <h1>✍️ Digit Recognizer</h1>
+    <p class="sub">Draw a digit (0-9) in the box. Draw it big and bold. The CNN predicts it live.</p>
+
+    <div class="row">
+      <div class="left">
+        <canvas id="canvas" width="280" height="280"></canvas>
+        <button id="clearBtn">Clear</button>
+      </div>
+
+      <div class="right">
+        <div class="result">
+          <div class="big-digit" id="digit">?</div>
+          <div class="conf" id="conf">Waiting for your drawing...</div>
+        </div>
+        <div id="bars"></div>
+      </div>
+    </div>
+
+    <div class="tips">
+      <span>💡 Fill most of the box</span>
+      <span>🖊️ Use one bold stroke</span>
+      <span>⚡ Updates as you draw</span>
+    </div>
+  </div>
+
+<script>
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+  const digitEl = document.getElementById("digit");
+  const confEl = document.getElementById("conf");
+  const barsEl = document.getElementById("bars");
+
+  let drawing = false;
+  let timer = null;
+  let requestId = 0;
+
+  // ---------- Build the 10 confidence bars ----------
+  for (let i = 0; i < 10; i++) {
+    barsEl.insertAdjacentHTML("beforeend", `
+      <div class="bar-row">
+        <span class="label">${i}</span>
+        <div class="track"><div class="fill" id="fill${i}"></div></div>
+        <span class="pct" id="pct${i}">0%</span>
+      </div>`);
+  }
+
+  // ---------- Canvas setup ----------
+  function resetCanvas() {
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 20;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+  }
+
+  function resetUI() {
+    digitEl.textContent = "?";
+    confEl.textContent = "Waiting for your drawing...";
+    for (let i = 0; i < 10; i++) {
+      document.getElementById("fill" + i).style.width = "0%";
+      document.getElementById("fill" + i).classList.remove("top");
+      document.getElementById("pct" + i).textContent = "0%";
+    }
+  }
+
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: (e.clientX - rect.left) * canvas.width / rect.width,
+      y: (e.clientY - rect.top) * canvas.height / rect.height,
+    };
+  }
+
+  // ---------- Drawing ----------
+  canvas.addEventListener("pointerdown", (e) => {
+    drawing = true;
+    canvas.setPointerCapture(e.pointerId);
+    const p = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+    ctx.lineTo(p.x, p.y);          // draws a dot for a single click
+    ctx.stroke();
+  });
+
+  canvas.addEventListener("pointermove", (e) => {
+    if (!drawing) return;
+    const p = getPos(e);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    schedulePredict();
+  });
+
+  ["pointerup", "pointercancel"].forEach((evt) =>
+    canvas.addEventListener(evt, () => {
+      if (!drawing) return;
+      drawing = false;
+      predict();                    // final prediction when the stroke ends
+    })
+  );
+
+  // ---------- Prediction ----------
+  function schedulePredict() {
+    if (timer) return;              // throttle: at most once per 150 ms
+    timer = setTimeout(() => { timer = null; predict(); }, 150);
+  }
+
+  async function predict() {
+    const myId = ++requestId;
+    try {
+      const res = await fetch("/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: canvas.toDataURL("image/png") }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (myId !== requestId) return;   // ignore outdated responses
+      showResult(data);
+    } catch (err) {
+      confEl.textContent = "Could not reach the server. Is app.py running?";
+    }
+  }
+
+  function showResult(data) {
+    digitEl.textContent = data.digit;
+    const pct = (data.confidence * 100).toFixed(1);
+    confEl.textContent = data.confidence < 0.6
+      ? `Not sure (${pct}%). Try drawing bigger and clearer`
+      : `Confidence: ${pct}%`;
+
+    data.probabilities.forEach((p, i) => {
+      const fill = document.getElementById("fill" + i);
+      fill.style.width = (p * 100).toFixed(1) + "%";
+      fill.classList.toggle("top", i === data.digit);
+      document.getElementById("pct" + i).textContent = (p * 100).toFixed(0) + "%";
+    });
+  }
+
+  // ---------- Clear ----------
+  document.getElementById("clearBtn").addEventListener("click", () => {
+    requestId++;                    // cancel any pending result
+    resetCanvas();
+    resetUI();
+  });
+
+  resetCanvas();
+</script>
+</body>
+</html>
