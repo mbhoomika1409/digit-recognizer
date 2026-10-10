@@ -7,7 +7,7 @@ A convolutional neural network trained on MNIST, served through a Flask web app.
 
 ## Demo
 
-![Digit Recognizer demo](images/demo1.png)
+<img width="1398" height="815" alt="Screenshot 2026-10-10 at 18 40 05" src="https://github.com/user-attachments/assets/1e8df671-7d42-4f67-bb6a-bb7a6eb02409" />
 
 ## Results
 
